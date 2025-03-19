@@ -1,0 +1,5 @@
+# Exclude dataset, log, output, and __pycache__ directories
+dataset/
+log/
+output/
+__pycache__/
