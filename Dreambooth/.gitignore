@@ -3,3 +3,4 @@ dataset/
 log/
 output/
 __pycache__/
+model.ckpt
