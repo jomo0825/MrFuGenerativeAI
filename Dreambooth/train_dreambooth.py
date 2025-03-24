@@ -809,8 +809,10 @@ def encode_prompt(text_encoder, input_ids, attention_mask, text_encoder_use_atte
     return prompt_embeds
 
 
-def main(args, _callback):
+def main(args=None, _callback=None):
     global callback
+    if args is None:
+        args = parse_args()
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
@@ -1451,5 +1453,4 @@ def main(args, _callback):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(args)
+    main()

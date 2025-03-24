@@ -174,8 +174,11 @@ def log_validation(text_encoder, tokenizer, unet, vae, args, accelerator, weight
                     ]
                 }
             )
-    if hasattr(args, "callback") and args.callback is not None:
-        args.callback(images[0], global_step)
+
+    if callback is not None:
+        # logger.info("callback executed.")
+        callback(images[0], global_step)
+
     del pipeline
     torch.cuda.empty_cache()
     return images
@@ -196,7 +199,7 @@ def save_progress(text_encoder, placeholder_token_ids, accelerator, args, save_p
         torch.save(learned_embeds_dict, save_path)
 
 
-def parse_args():
+def parse_args(input_args=None):
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument(
         "--save_steps",
@@ -262,7 +265,7 @@ def parse_args():
         default="text-inversion-model",
         help="The output directory where the model predictions and checkpoints will be written.",
     )
-    parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
+    parser.add_argument("--seed", type=int, default=1, help="A seed for reproducible training.")
     parser.add_argument(
         "--resolution",
         type=int,
@@ -276,7 +279,7 @@ def parse_args():
         "--center_crop", action="store_true", help="Whether to center crop images before resizing to resolution."
     )
     parser.add_argument(
-        "--train_batch_size", type=int, default=16, help="Batch size (per device) for the training dataloader."
+        "--train_batch_size", type=int, default=1, help="Batch size (per device) for the training dataloader."
     )
     parser.add_argument("--num_train_epochs", type=int, default=100)
     parser.add_argument(
@@ -448,8 +451,18 @@ def parse_args():
         action="store_true",
         help="If specified save the checkpoint not in `safetensors` format, but in original PyTorch format instead.",
     )
+    parser.add_argument(
+        "--test",
+        type=str,
+        default="ABC",
+        help="Test",
+    )
 
-    args = parser.parse_args()
+    if input_args is not None:
+        args = parser.parse_args(input_args)
+    else:
+        args = parser.parse_args()
+
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != args.local_rank:
         args.local_rank = env_local_rank
@@ -599,9 +612,11 @@ class TextualInversionDataset(Dataset):
         return example
 
 
-def main(args=None, callback=None):
-    args = parse_args()
-    args.callback = callback
+def main(args=None, options=None):
+    global callback
+    if args is None:
+        args = parse_args()
+    callback = options.get("_callback")
 
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
