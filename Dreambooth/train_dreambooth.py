@@ -330,10 +330,10 @@ def parse_args(input_args=None):
         help="Whether to train the text encoder. If set, the text encoder should be float32 precision.",
     )
     parser.add_argument(
-        "--train_batch_size", type=int, default=4, help="Batch size (per device) for the training dataloader."
+        "--train_batch_size", type=int, default=1, help="Batch size (per device) for the training dataloader."
     )
     parser.add_argument(
-        "--sample_batch_size", type=int, default=4, help="Batch size (per device) for sampling images."
+        "--sample_batch_size", type=int, default=1, help="Batch size (per device) for sampling images."
     )
     parser.add_argument("--num_train_epochs", type=int, default=1)
     parser.add_argument(
@@ -579,6 +579,12 @@ def parse_args(input_args=None):
         choices=["DPMSolverMultistepScheduler", "DDPMScheduler"],
         help="Select which scheduler to use for validation. DDPMScheduler is recommended for DeepFloyd IF.",
     )
+    parser.add_argument(
+        "--test",
+        type=str,
+        default="ABC",
+        help="Test",
+    )
 
     if input_args is not None:
         args = parser.parse_args(input_args)
@@ -803,12 +809,14 @@ def encode_prompt(text_encoder, input_ids, attention_mask, text_encoder_use_atte
     return prompt_embeds
 
 
-def main(args):
+def main(args, _callback):
+    global callback
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
             " Please use `huggingface-cli login` to authenticate with the Hub."
         )
+    callback = _callback
 
     logging_dir = Path(".", args.logging_dir)
 
@@ -1377,6 +1385,9 @@ def main(args):
                             validation_prompt_encoder_hidden_states,
                             validation_prompt_negative_prompt_embeds,
                         )
+                    
+                    if callback :
+                        callback("callback from train.")
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)

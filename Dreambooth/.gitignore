@@ -4,3 +4,4 @@ log/
 output/
 __pycache__/
 model.ckpt
+test.ipynb
