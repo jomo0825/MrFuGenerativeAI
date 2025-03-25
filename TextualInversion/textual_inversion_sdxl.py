@@ -126,8 +126,10 @@ def log_validation(
     accelerator,
     weight_dtype,
     epoch,
+    global_step,
     is_final_validation=False,
 ):
+    global callback
     logger.info(
         f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
         f" {args.validation_prompt}."
@@ -169,7 +171,6 @@ def log_validation(
                     ]
                 }
             )
-    global callback
     if callback is not None:
         # logger.info("callback executed.")
         callback(images[0], global_step)
@@ -601,7 +602,7 @@ def main(args=None, options=None):
     global callback
     if args is None:
         args = parse_args()
-    if options:
+    if options is not None:
         callback = options.get("_callback")
     
     if args.report_to == "wandb" and args.hub_token is not None:
@@ -1051,6 +1052,7 @@ def main(args=None, options=None):
                             accelerator,
                             weight_dtype,
                             epoch,
+                            global_step,
                         )
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
