@@ -169,6 +169,7 @@ def log_validation(
                     ]
                 }
             )
+    global callback
     if callback is not None:
         # logger.info("callback executed.")
         callback(images[0], global_step)
