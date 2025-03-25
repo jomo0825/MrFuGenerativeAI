@@ -129,7 +129,6 @@ def log_validation(
     global_step,
     is_final_validation=False,
 ):
-    global callback
     logger.info(
         f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
         f" {args.validation_prompt}."
@@ -171,6 +170,7 @@ def log_validation(
                     ]
                 }
             )
+    global callback
     if callback is not None:
         # logger.info("callback executed.")
         callback(images[0], global_step)
@@ -604,6 +604,8 @@ def main(args=None, options=None):
         args = parse_args()
     if options is not None:
         callback = options.get("_callback")
+    else:
+        callback = None
     
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
