@@ -607,11 +607,12 @@ class TextualInversionDataset(Dataset):
 
 
 def main(args=None, options=None):
-    global callback
+    global callback, stop_flag
     if args is None:
         args = parse_args()
     if options:
         callback = options.get("_callback")
+        stop_flag = options.get("stop_flag")
 
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
@@ -993,6 +994,8 @@ def main(args=None, options=None):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
+            if stop_flag.is_set():
+                break
             if global_step >= args.max_train_steps:
                 break
         
