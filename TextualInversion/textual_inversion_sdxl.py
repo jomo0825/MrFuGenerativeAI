@@ -600,7 +600,9 @@ def main(args=None, options=None):
     global callback
     if args is None:
         args = parse_args()
-    callback = options.get("_callback")
+    if options:
+        callback = options.get("_callback")
+    
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
