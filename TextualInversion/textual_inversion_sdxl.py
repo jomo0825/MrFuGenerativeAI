@@ -155,6 +155,7 @@ def log_validation(
     images = []
     for _ in range(args.num_validation_images):
         image = pipeline(args.validation_prompt, num_inference_steps=25, generator=generator).images[0]
+        image.save(os.path.join(args.logging_dir, f"{args.placeholder_token}_preview_{global_step}.png"))
         images.append(image)
 
     tracker_key = "test" if is_final_validation else "validation"
