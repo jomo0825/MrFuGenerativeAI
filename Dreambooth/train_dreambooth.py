@@ -198,6 +198,11 @@ def log_validation(
                 }
             )
 
+    global callback
+    if callback is not None:
+        # logger.info("callback executed.")
+        callback(images[0], global_step)
+
     del pipeline
     torch.cuda.empty_cache()
 
@@ -809,16 +814,19 @@ def encode_prompt(text_encoder, input_ids, attention_mask, text_encoder_use_atte
     return prompt_embeds
 
 
-def main(args=None, _callback=None):
-    global callback
+def main(args=None, options=None):
+    global callback, stop_flag
     if args is None:
         args = parse_args()
+    if options:
+        callback = options.get("_callback")
+        stop_flag = options.get("stop_flag")
+
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
             " Please use `huggingface-cli login` to authenticate with the Hub."
         )
-    callback = _callback
 
     logging_dir = Path(".", args.logging_dir)
 
@@ -1387,14 +1395,13 @@ def main(args=None, _callback=None):
                             validation_prompt_encoder_hidden_states,
                             validation_prompt_negative_prompt_embeds,
                         )
-                    
-                    if callback :
-                        callback("callback from train.")
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
-
+            
+            if stop_flag.is_set():
+                break
             if global_step >= args.max_train_steps:
                 break
 
