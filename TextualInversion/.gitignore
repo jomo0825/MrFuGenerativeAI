@@ -1,6 +1,7 @@
-dataset/
-log/
 output/
 __pycache__/
-test.ipynb
 Bi-dir/
+dataset/
+logs/
+output/
+test.ipynb
