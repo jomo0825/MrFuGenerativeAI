@@ -1,4 +1,5 @@
-models/
-output/
 __pycache__/
 .gradio/
+embeddings/
+models/
+output/
