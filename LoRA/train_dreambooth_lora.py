@@ -64,10 +64,13 @@ from diffusers.utils import (
     convert_state_dict_to_diffusers,
     convert_unet_state_dict_to_peft,
     is_wandb_available,
+    convert_all_state_dict_to_peft,
+    convert_state_dict_to_kohya,
 )
 from diffusers.utils.hub_utils import load_or_create_model_card, populate_model_card
 from diffusers.utils.import_utils import is_xformers_available
 from diffusers.utils.torch_utils import is_compiled_module
+from safetensors.torch import load_file, save_file
 
 
 if is_wandb_available():
@@ -538,6 +541,11 @@ def parse_args(input_args=None):
         default=4,
         help=("The dimension of the LoRA update matrices."),
     )
+    parser.add_argument(
+        "--output_kohya_format",
+        action="store_true",
+        help="Flag to additionally generate final state dict in the Kohya format so that it becomes compatible with A111, Comfy, Kohya, etc.",
+    )
 
     if input_args is not None:
         args = parser.parse_args(input_args)
@@ -987,6 +995,12 @@ def main(args=None, options=None):
                 text_encoder_lora_layers=text_encoder_lora_layers_to_save,
             )
 
+            if args.output_kohya_format:
+                lora_state_dict = load_file(f"{output_dir}/pytorch_lora_weights.safetensors")
+                peft_state_dict = convert_all_state_dict_to_peft(lora_state_dict)
+                kohya_state_dict = convert_state_dict_to_kohya(peft_state_dict)
+                save_file(kohya_state_dict, f"{output_dir}/pytorch_lora_weights_kohya.safetensors")
+
     def load_model_hook(models, input_dir):
         unet_ = None
         text_encoder_ = None
@@ -1373,36 +1387,36 @@ def main(args=None, options=None):
             if global_step >= args.max_train_steps:
                 break
 
-        if accelerator.is_main_process:
-            # if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
-            if args.validation_prompt is not None and global_step % args.validation_epochs == 0:
-                # create pipeline
-                pipeline = DiffusionPipeline.from_pretrained(
-                    args.pretrained_model_name_or_path,
-                    unet=unwrap_model(unet),
-                    text_encoder=None if args.pre_compute_text_embeddings else unwrap_model(text_encoder),
-                    revision=args.revision,
-                    variant=args.variant,
-                    torch_dtype=weight_dtype,
-                )
+            if accelerator.is_main_process:
+                # if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
+                if args.validation_prompt is not None and global_step % args.validation_steps == 0:
+                    # create pipeline
+                    pipeline = DiffusionPipeline.from_pretrained(
+                        args.pretrained_model_name_or_path,
+                        unet=unwrap_model(unet),
+                        text_encoder=None if args.pre_compute_text_embeddings else unwrap_model(text_encoder),
+                        revision=args.revision,
+                        variant=args.variant,
+                        torch_dtype=weight_dtype,
+                    )
 
-                if args.pre_compute_text_embeddings:
-                    pipeline_args = {
-                        "prompt_embeds": validation_prompt_encoder_hidden_states,
-                        "negative_prompt_embeds": validation_prompt_negative_prompt_embeds,
-                    }
-                else:
-                    pipeline_args = {"prompt": args.validation_prompt}
+                    if args.pre_compute_text_embeddings:
+                        pipeline_args = {
+                            "prompt_embeds": validation_prompt_encoder_hidden_states,
+                            "negative_prompt_embeds": validation_prompt_negative_prompt_embeds,
+                        }
+                    else:
+                        pipeline_args = {"prompt": args.validation_prompt}
 
-                images = log_validation(
-                    pipeline,
-                    args,
-                    accelerator,
-                    pipeline_args,
-                    epoch,
-                    weight_dtype,
-                    global_step,
-                )
+                    images = log_validation(
+                        pipeline,
+                        args,
+                        accelerator,
+                        pipeline_args,
+                        epoch,
+                        weight_dtype,
+                        global_step,
+                    )
 
     # Save the lora layers
     accelerator.wait_for_everyone()
@@ -1423,6 +1437,12 @@ def main(args=None, options=None):
             unet_lora_layers=unet_lora_state_dict,
             text_encoder_lora_layers=text_encoder_state_dict,
         )
+
+        if args.output_kohya_format:
+            lora_state_dict = load_file(f"{args.output_dir}/pytorch_lora_weights.safetensors")
+            peft_state_dict = convert_all_state_dict_to_peft(lora_state_dict)
+            kohya_state_dict = convert_state_dict_to_kohya(peft_state_dict)
+            save_file(kohya_state_dict, f"{args.output_dir}/pytorch_lora_weights_kohya.safetensors")
 
         # Final inference
         # Load previous pipeline
