@@ -1,6 +1,6 @@
 # Exclude dataset, log, output, and __pycache__ directories
 dataset/
-log/
+logs/
 output/
 __pycache__/
 model.safetensors

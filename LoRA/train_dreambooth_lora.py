@@ -282,12 +282,21 @@ def parse_args(input_args=None):
         default=4,
         help="Number of images that should be generated during validation with `validation_prompt`.",
     )
+    # parser.add_argument(
+    #     "--validation_epochs",
+    #     type=int,
+    #     default=50,
+    #     help=(
+    #         "Run dreambooth validation every X epochs. Dreambooth validation consists of running the prompt"
+    #         " `args.validation_prompt` multiple times: `args.num_validation_images`."
+    #     ),
+    # )
     parser.add_argument(
-        "--validation_epochs",
+        "--validation_steps",
         type=int,
         default=50,
         help=(
-            "Run dreambooth validation every X epochs. Dreambooth validation consists of running the prompt"
+            "Run dreambooth validation every X steps. Dreambooth validation consists of running the prompt"
             " `args.validation_prompt` multiple times: `args.num_validation_images`."
         ),
     )
@@ -1365,7 +1374,8 @@ def main(args=None, options=None):
                 break
 
         if accelerator.is_main_process:
-            if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
+            # if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
+            if args.validation_prompt is not None and global_step % args.validation_epochs == 0:
                 # create pipeline
                 pipeline = DiffusionPipeline.from_pretrained(
                     args.pretrained_model_name_or_path,
@@ -1390,8 +1400,8 @@ def main(args=None, options=None):
                     accelerator,
                     pipeline_args,
                     epoch,
+                    weight_dtype,
                     global_step,
-                    torch_dtype=weight_dtype,
                 )
 
     # Save the lora layers
@@ -1433,8 +1443,9 @@ def main(args=None, options=None):
                 accelerator,
                 pipeline_args,
                 epoch,
+                weight_dtype,
+                global_step,
                 is_final_validation=True,
-                torch_dtype=weight_dtype,
             )
 
         if args.push_to_hub:
