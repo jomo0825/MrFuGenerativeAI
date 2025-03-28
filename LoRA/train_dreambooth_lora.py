@@ -999,7 +999,7 @@ def main(args=None, options=None):
                 lora_state_dict = load_file(f"{output_dir}/pytorch_lora_weights.safetensors")
                 peft_state_dict = convert_all_state_dict_to_peft(lora_state_dict)
                 kohya_state_dict = convert_state_dict_to_kohya(peft_state_dict)
-                save_file(kohya_state_dict, f"{output_dir}/pytorch_lora_weights.safetensors")
+                save_file(kohya_state_dict, f"{output_dir}/pytorch_lora_weights_kohya.safetensors")
 
     def load_model_hook(models, input_dir):
         unet_ = None
