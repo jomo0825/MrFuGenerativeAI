@@ -1442,7 +1442,7 @@ def main(args=None, options=None):
             lora_state_dict = load_file(f"{args.output_dir}/pytorch_lora_weights.safetensors")
             peft_state_dict = convert_all_state_dict_to_peft(lora_state_dict)
             kohya_state_dict = convert_state_dict_to_kohya(peft_state_dict)
-            save_file(kohya_state_dict, f"{args.output_dir}/pytorch_lora_weights_kohya.safetensors")
+            save_file(kohya_state_dict, f"{args.output_dir}/pytorch_lora_weights.safetensors")
 
         # Final inference
         # Load previous pipeline
