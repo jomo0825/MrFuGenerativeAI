@@ -1406,7 +1406,9 @@ def main(args=None, options=None):
                             "negative_prompt_embeds": validation_prompt_negative_prompt_embeds,
                         }
                     else:
-                        pipeline_args = {"prompt": args.validation_prompt}
+                        pipeline_args = {"prompt": args.validation_prompt,
+                                         "num_inference_steps": 20,
+                                         "guidance_scale": 5}
 
                     images = log_validation(
                         pipeline,
@@ -1456,7 +1458,9 @@ def main(args=None, options=None):
         # run inference
         images = []
         if args.validation_prompt and args.num_validation_images > 0:
-            pipeline_args = {"prompt": args.validation_prompt, "num_inference_steps": 25}
+            pipeline_args = {"prompt": args.validation_prompt, 
+                            "num_inference_steps": 20,
+                            "guidance_scale": 5}
             images = log_validation(
                 pipeline,
                 args,
