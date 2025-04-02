@@ -280,6 +280,12 @@ def parse_args(input_args=None):
         help="A prompt that is used during validation to verify that the model is learning.",
     )
     parser.add_argument(
+        "--validation_neg_prompt",
+        type=str,
+        default=None,
+        help="A negative prompt that is used during validation to verify that the model is learning.",
+    )
+    parser.add_argument(
         "--num_validation_images",
         type=int,
         default=4,
@@ -1407,6 +1413,7 @@ def main(args=None, options=None):
                         }
                     else:
                         pipeline_args = {"prompt": args.validation_prompt,
+                                         "negative_prompt": args.validation_neg_prompt,
                                          "num_inference_steps": 20,
                                          "guidance_scale": 5}
 
@@ -1459,6 +1466,7 @@ def main(args=None, options=None):
         images = []
         if args.validation_prompt and args.num_validation_images > 0:
             pipeline_args = {"prompt": args.validation_prompt, 
+                            "negative_prompt": args.validation_neg_prompt,
                             "num_inference_steps": 20,
                             "guidance_scale": 5}
             images = log_validation(
