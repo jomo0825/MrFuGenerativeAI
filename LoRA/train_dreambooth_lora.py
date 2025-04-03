@@ -1005,7 +1005,33 @@ def main(args=None, options=None):
                 lora_state_dict = load_file(f"{output_dir}/pytorch_lora_weights.safetensors")
                 peft_state_dict = convert_all_state_dict_to_peft(lora_state_dict)
                 kohya_state_dict = convert_state_dict_to_kohya(peft_state_dict)
-                save_file(kohya_state_dict, f"{output_dir}/pytorch_lora_weights_kohya.safetensors")
+
+                # new_model_dict = dict(model_dict)
+                new_model_dict = {}
+                # new_model_dict = {}
+                for key, tensor in kohya_state_dict.items():
+                    # 建立一個新的字典，並替換所有鍵名中的 "lora_te1" 為 "lora_te"
+                    if key.startswith("lora_te1"): 
+                        new_key = key.replace("lora_te1", "lora_te")
+                        new_model_dict[new_key] = tensor
+                    # 針對所有 unet 層補上 alpha
+                    # 假設 unet 層的鍵名稱以 "lora_unet" 開頭，且其對應的權重鍵通常以 ".lora_down.weight" 或 ".lora_up.weight" 結尾
+                    # 我們透過 rsplit 切割鍵字，取得基底名稱，然後檢查是否已經有 ".alpha" 的鍵，若沒有則加入
+                    if key.startswith("lora_unet"): 
+                        if "_lora.down.weight" in key:
+                            # 透過 rsplit 將鍵拆分成 [base, direction, 'weight']
+                            parts = key.rsplit('.', 2)
+                            if len(parts) != 3:
+                                continue  # 格式不符則跳過
+                            base = parts[0]  # 例如 "lora_unet_down_blocks_0_attentions_0_transformer_blocks_0_attn1_to_k_lora"
+                            parts = base.rsplit('_lora', 2)
+                            # 如果該 alpha 鍵不存在，就補上
+                            # if alpha_key not in new_model_dict:
+                            new_model_dict[f"{parts[0]}.alpha"] = torch.tensor(tensor.shape[0])
+                            new_model_dict[f"{parts[0]}.lora_down.weight"] = kohya_state_dict[f"{parts[0]}_lora.down.weight"].clone().detach()
+                            new_model_dict[f"{parts[0]}.lora_up.weight"] = kohya_state_dict[f"{parts[0]}_lora.up.weight"].clone().detach()
+
+                save_file(new_model_dict, f"{output_dir}/pytorch_lora_weights_kohya.safetensors")
 
     def load_model_hook(models, input_dir):
         unet_ = None
