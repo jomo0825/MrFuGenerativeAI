@@ -1418,6 +1418,10 @@ def main(args=None, options=None):
                 break
             if global_step >= args.max_train_steps:
                 break
+            global callback
+            if callback is not None:
+                # logger.info("callback executed.")
+                callback(None, global_step)
 
             if accelerator.is_main_process:
                 # if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
