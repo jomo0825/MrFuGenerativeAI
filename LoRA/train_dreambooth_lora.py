@@ -479,7 +479,7 @@ def parse_args(input_args=None):
     parser.add_argument(
         "--report_to",
         type=str,
-        default="tensorboard",
+        default=None,
         help=(
             'The integration to report the results and logs to. Supported platforms are `"tensorboard"`'
             ' (default), `"wandb"` and `"comet_ml"`. Use `"all"` to report to all integrations.'
@@ -1287,10 +1287,14 @@ def main(args=None, options=None):
     )
 
     for epoch in range(first_epoch, args.num_train_epochs):
+        if stop_flag.is_set():
+            break
         unet.train()
         if args.train_text_encoder:
             text_encoder.train()
         for step, batch in enumerate(train_dataloader):
+            if stop_flag.is_set():
+                break
             with accelerator.accumulate(unet):
                 pixel_values = batch["pixel_values"].to(dtype=weight_dtype)
 
@@ -1414,11 +1418,8 @@ def main(args=None, options=None):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            if stop_flag.is_set():
-                break
             if global_step >= args.max_train_steps:
                 break
-            global callback
             if callback is not None:
                 # logger.info("callback executed.")
                 callback(None, global_step)
