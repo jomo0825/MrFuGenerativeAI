@@ -28,7 +28,7 @@ This repo includes the following components:
 
 - [Git](https://git-scm.com/)
 - Python 3.10+
-- Pytorch on CUDA 12.4(https://pytorch.org/)
+- [Pytorch on CUDA 12.4](https://pytorch.org/)
 - [Google Colab](https://colab.research.google.com/) (if you choose to run notebooks in the cloud)
 - Local machine setup (if running locally, ensure you have sufficient VRAM for Dreambooth)
 
