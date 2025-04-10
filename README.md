@@ -20,8 +20,7 @@ This repo includes the following components:
    **Note:** This module requires significant VRAM. For best performance, it is recommended to run Dreambooth on a local machine.
 
 4. **LoRA**  
-   A streamlined WebUI for training Stable Diffusion v1.5 LoRA models on Google Colab or a local machine.  
-   The generated `<pytorch_lora_weights_kohya.safetensors>` file is compatible with the A1111 WebUI LoRA model.
+   A streamlined WebUI for training Stable Diffusion v1.5 LoRA models on Google Colab or a local machine. The generated `<pytorch_lora_weights_kohya.safetensors>` file is compatible with the A1111 WebUI LoRA model.
 
 ## Getting Started
 
@@ -42,24 +41,20 @@ This repo includes the following components:
    git clone https://github.com/yourusername/MrFuGenerativeAI.git
    cd MrFuGenerativeAI
 
-2. Setup the Environment:
+2. Setup the Environment: In each Jupyter notebook, run the 1st cell to install required python packages.
 
-In each Jupyter notebook, run the 1st cell to install required python packages.
-
-3. Running the WebUI:
-
-For Google Colab, open the corresponding notebook github address and follow the in-notebook instructions.
+3. Running the WebUI: For Google Colab, open the corresponding notebook github address and follow the in-notebook instructions.
 
 For local setups, run the provided scripts in VSCode with Jupyter plugin installed to launch the Gradio WebUI.
 
 # Usage
-Diffusion Model: Run the Gradio WebUI to start inferencing using Stable Diffusion v1.5.
+1. Diffusion Model: Run `<MrFu_Stable_Diffusion_WebUI.ipynb>` to lauch Gradio WebUI and start inferencing using Stable Diffusion v1.5.
 
-Textual Inversion: Train your custom Textual Inversion model via the provided WebUI.
+2. Textual Inversion: Run `<MrFu_Textual_Inversion.ipynb>` to train your custom Textual Inversion model via the provided WebUI.
 
-Dreambooth: Initiate Dreambooth training using the Colab notebook or local setup, keeping in mind the VRAM requirements.
+3. Dreambooth: Run `<MrFu_Dreambooth.ipynb>`to initiate Dreambooth training using the Colab notebook or local setup, keeping in mind the VRAM requirements.
 
-LoRA: Train a LoRA model and generate <pytorch_lora_weights_kohya.safetensors> compatible with A1111 WebUI.
+4. LoRA: Run `<MrFu_LoRA.ipynb>` to train a LoRA model and generate <pytorch_lora_weights_kohya.safetensors> compatible with A1111 WebUI.
 
 For more detailed instructions, please refer to the individual module documentation within this repository.
 
