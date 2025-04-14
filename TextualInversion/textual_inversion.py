@@ -888,6 +888,8 @@ def main(args=None, options=None):
     orig_embeds_params = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight.data.clone()
 
     for epoch in range(first_epoch, args.num_train_epochs):
+        if stop_flag.is_set():
+            break
         text_encoder.train()
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(text_encoder):
@@ -994,10 +996,11 @@ def main(args=None, options=None):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            if stop_flag.is_set():
-                break
             if global_step >= args.max_train_steps:
                 break
+            if callback is not None:
+                # logger.info("callback executed.")
+                callback(None, global_step)
         
     # Create the pipeline using the trained modules and save it.
     accelerator.wait_for_everyone()
