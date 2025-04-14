@@ -158,7 +158,7 @@ def log_validation(text_encoder, tokenizer, unet, vae, args, accelerator, weight
 
         with autocast_ctx:
             image = pipeline(args.validation_prompt, guidance_scale=5.0, num_inference_steps=20, generator=generator).images[0]
-            image.save(os.path.join(args.logging_dir, f"{args.placeholder_token}_preview_{global_step}.png"))
+            # image.save(os.path.join(args.logging_dir, f"{args.placeholder_token}_preview_{global_step}.png"))
         images.append(image)
 
     #print(f"tracker:{accelerator.trackers}")
@@ -380,7 +380,7 @@ def parse_args(input_args=None):
     parser.add_argument(
         "--report_to",
         type=str,
-        default="tensorboard",
+        default=None,
         help=(
             'The integration to report the results and logs to. Supported platforms are `"tensorboard"`'
             ' (default), `"wandb"` and `"comet_ml"`. Use `"all"` to report to all integrations.'
@@ -686,6 +686,14 @@ def main(args=None, options=None):
     # Add the placeholder token in tokenizer
     placeholder_tokens = [args.placeholder_token]
 
+    # Convert the initializer_token, placeholder_token to ids
+    token_ids = tokenizer.encode(args.initializer_token, add_special_tokens=False)
+    # Check if initializer_token is a single token or a sequence of tokens
+    # if len(token_ids) > 1:
+    #     raise ValueError("The initializer token must be a single token.")
+
+    args.num_vectors = len(token_ids)
+
     if args.num_vectors < 1:
         raise ValueError(f"--num_vectors has to be larger or equal to 1, but is {args.num_vectors}")
 
@@ -702,13 +710,7 @@ def main(args=None, options=None):
             " `placeholder_token` that is not already in the tokenizer."
         )
 
-    # Convert the initializer_token, placeholder_token to ids
-    token_ids = tokenizer.encode(args.initializer_token, add_special_tokens=False)
-    # Check if initializer_token is a single token or a sequence of tokens
-    if len(token_ids) > 1:
-        raise ValueError("The initializer token must be a single token.")
-
-    initializer_token_id = token_ids[0]
+    # initializer_token_id = token_ids[0]
     placeholder_token_ids = tokenizer.convert_tokens_to_ids(placeholder_tokens)
 
     # Resize the token embeddings as we are adding new special tokens to the tokenizer
@@ -717,8 +719,8 @@ def main(args=None, options=None):
     # Initialise the newly added placeholder token with the embeddings of the initializer token
     token_embeds = text_encoder.get_input_embeddings().weight.data
     with torch.no_grad():
-        for token_id in placeholder_token_ids:
-            token_embeds[token_id] = token_embeds[initializer_token_id].clone()
+        for index, token_id in enumerate(placeholder_token_ids):
+            token_embeds[token_id] = token_embeds[token_ids[index]].clone()
 
     # Freeze vae and unet
     vae.requires_grad_(False)
@@ -892,6 +894,8 @@ def main(args=None, options=None):
             break
         text_encoder.train()
         for step, batch in enumerate(train_dataloader):
+            if stop_flag.is_set():
+                break
             with accelerator.accumulate(text_encoder):
                 # Convert images to latent space
                 latents = vae.encode(batch["pixel_values"].to(dtype=weight_dtype)).latent_dist.sample().detach()
@@ -951,14 +955,14 @@ def main(args=None, options=None):
                         else f"{args.placeholder_token}-steps-{global_step}.safetensors"
                     )
                     save_path = os.path.join(args.output_dir, weight_name)
-                    save_progress(
-                        text_encoder,
-                        placeholder_token_ids,
-                        accelerator,
-                        args,
-                        save_path,
-                        safe_serialization=not args.no_safe_serialization,
-                    )
+                    # save_progress(
+                    #     text_encoder,
+                    #     placeholder_token_ids,
+                    #     accelerator,
+                    #     args,
+                    #     save_path,
+                    #     safe_serialization=not args.no_safe_serialization,
+                    # )
 
                 if accelerator.is_main_process:
                     if global_step % args.checkpointing_steps == 0:
@@ -983,8 +987,8 @@ def main(args=None, options=None):
                                     shutil.rmtree(removing_checkpoint)
 
                         save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}")
-                        accelerator.save_state(save_path)
-                        logger.info(f"Saved state to {save_path}")
+                        # accelerator.save_state(save_path)
+                        # logger.info(f"Saved state to {save_path}")
 
                     if args.validation_prompt is not None and global_step % args.validation_steps == 0:
                         print("log_validation")
