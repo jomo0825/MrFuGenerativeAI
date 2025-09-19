@@ -393,6 +393,12 @@ def parse_args(input_args=None):
         help="A prompt that is used during validation to verify that the model is learning.",
     )
     parser.add_argument(
+        "--validation_negative_prompt",
+        type=str,
+        default="nsfw",
+        help="Negative prompt used during validation (classifier-free guidance). Empty string = no negatives.",
+    )
+    parser.add_argument(
         "--num_validation_images",
         type=int,
         default=1,
