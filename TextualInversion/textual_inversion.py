@@ -157,7 +157,7 @@ def log_validation(text_encoder, tokenizer, unet, vae, args, accelerator, weight
             autocast_ctx = torch.autocast(accelerator.device.type)
 
         with autocast_ctx:
-            image = pipeline(args.validation_prompt, guidance_scale=5.0, num_inference_steps=20, generator=generator).images[0]
+            image = pipeline(args.validation_prompt, negative_prompt=args.validation_negative_prompt, guidance_scale=5.0, num_inference_steps=20, generator=generator).images[0]
             # image.save(os.path.join(args.logging_dir, f"{args.placeholder_token}_preview_{global_step}.png"))
         images.append(image)
 
