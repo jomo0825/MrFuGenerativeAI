@@ -1384,6 +1384,7 @@ def main(args=None, options=None):
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
+                    global callback
                     if global_step >= args.max_train_steps:
                         break
                     if callback is not None:
