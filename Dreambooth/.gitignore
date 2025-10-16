@@ -5,3 +5,4 @@ output/
 __pycache__/
 model.safetensors
 test.ipynb
+class/
