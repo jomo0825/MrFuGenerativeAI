@@ -1387,7 +1387,7 @@ def main(args=None, options=None):
                         if global_step >= args.max_train_steps:
                             break
                         if callback is not None:
-                            logger.info("callback executed.")
+                            #logger.info("callback executed.")
                             callback(None, global_step)
                     
                     images = []
