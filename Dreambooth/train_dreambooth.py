@@ -1384,11 +1384,11 @@ def main(args=None, options=None):
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
-                    if global_step >= args.max_train_steps:
-                        break
-                    if callback is not None:
-                        # logger.info("callback executed.")
-                        callback(None, global_step)
+                        if global_step >= args.max_train_steps:
+                            break
+                        if callback is not None:
+                            logger.info("callback executed.")
+                            callback(None, global_step)
                     
                     images = []
                     if args.validation_prompt is not None and global_step % args.validation_steps == 0:

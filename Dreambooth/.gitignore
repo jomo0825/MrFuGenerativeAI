@@ -6,3 +6,4 @@ __pycache__/
 model.safetensors
 test.ipynb
 class/
+.gradio/
