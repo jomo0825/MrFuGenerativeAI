@@ -1425,28 +1425,42 @@ def main(args=None, options=None):
         if args.skip_save_text_encoder:
             pipeline_args["text_encoder"] = None
 
-        pipeline = DiffusionPipeline.from_pretrained(
-            args.pretrained_model_name_or_path,
-            unet=unwrap_model(unet),
-            revision=args.revision,
-            variant=args.variant,
-            **pipeline_args,
-        )
+        def save_unet(unet, safe_serialization=True):
+            """
+            Saves the UNet (and only the UNet) to out_dir/unet/.
+            Works whether `unet` is wrapped (DDP/Accelerate) or not.
+            """
+            unet_to_save = unwrap_model(unet)
 
-        # We train on the simplified learning objective. If we were previously predicting a variance, we need the scheduler to ignore it
-        scheduler_args = {}
+            # Prefer native HF save (creates safetensors if safe_serialization=True)
+            target = os.path.join(args.output_dir, "unet")
+            unet_to_save.save_pretrained(target, safe_serialization=safe_serialization)
+            print(f"[save_unet] UNet saved to: {target}")
+            
+        save_unet(unet)
+        
+        # pipeline = DiffusionPipeline.from_pretrained(
+        #     args.pretrained_model_name_or_path,
+        #     unet=unwrap_model(unet),
+        #     revision=args.revision,
+        #     variant=args.variant,
+        #     **pipeline_args,
+        # )
 
-        if "variance_type" in pipeline.scheduler.config:
-            variance_type = pipeline.scheduler.config.variance_type
+        # # We train on the simplified learning objective. If we were previously predicting a variance, we need the scheduler to ignore it
+        # scheduler_args = {}
 
-            if variance_type in ["learned", "learned_range"]:
-                variance_type = "fixed_small"
+        # if "variance_type" in pipeline.scheduler.config:
+        #     variance_type = pipeline.scheduler.config.variance_type
 
-            scheduler_args["variance_type"] = variance_type
+        #     if variance_type in ["learned", "learned_range"]:
+        #         variance_type = "fixed_small"
 
-        pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
+        #     scheduler_args["variance_type"] = variance_type
 
-        pipeline.save_pretrained(args.output_dir,safe_serialization=True )
+        # pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
+
+        # pipeline.save_pretrained(args.output_dir,safe_serialization=True )
 
         if args.push_to_hub:
             save_model_card(
@@ -1466,7 +1480,6 @@ def main(args=None, options=None):
             )
 
     accelerator.end_training()
-
 
 if __name__ == "__main__":
     main()
