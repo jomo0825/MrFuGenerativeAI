@@ -1431,7 +1431,10 @@ def main(args=None, options=None):
             Works whether `unet` is wrapped (DDP/Accelerate) or not.
             """
             unet_to_save = unwrap_model(unet)
-
+            unet_to_save.to("cpu")
+            torch.cuda.synchronize()
+            torch.cuda.empty_cache()
+            gc.collect()
             # Prefer native HF save (creates safetensors if safe_serialization=True)
             target = os.path.join(args.output_dir, "unet")
             unet_to_save.save_pretrained(target, safe_serialization=safe_serialization)
